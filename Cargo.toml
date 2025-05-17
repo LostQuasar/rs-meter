@@ -4,7 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = "3.2.23"
+eframe = "0.31.1"
+egui = "0.31.1"
+egui_extras = { version = "0.31.1", features = ["image"] }
+env_logger = "0.11.8"
 int-enum = "1.2.0"
 num = "0.4.3"
 num-derive = "0.4.2"
