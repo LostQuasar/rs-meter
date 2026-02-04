@@ -1,10 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::time::Duration;
-use egui::{ frame, global_theme_preference_buttons, style::Selection, Color32, Frame, Stroke, Style, Theme };
-use env_logger::fmt::style::Color;
+use egui::{ FontDefinitions, FontId, Style, Theme };
 use serialport::{ DataBits, Parity, SerialPort, StopBits };
 pub mod meter;
-
+use egui_extras;
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
@@ -17,14 +16,28 @@ fn main() -> eframe::Result {
         "RS Multimeter",
         options,
         Box::new(|cc| {
-            
-        Ok(Box::new(MyApp::new(cc)))
+            egui_extras::install_image_loaders(&cc.egui_ctx);
+            let mut fonts: FontDefinitions = egui::FontDefinitions::default();
+            fonts.font_data.insert(
+                "DSEG7".to_owned(),
+                egui::FontData
+                    ::from_static(include_bytes!("../res/DSEG7ClassicMini-Bold.ttf"))
+                    .into()
+            );
+            fonts.families.insert(egui::FontFamily::Name("DSEG7".into()), vec!["DSEG7".to_owned()]);
+            fonts.families
+                .get_mut(&egui::FontFamily::Monospace)
+                .unwrap()
+                .insert(0, "DSEG7".to_owned()); //.push("Helvetica".to_owned());
+            cc.egui_ctx.set_fonts(fonts);
+
+            Ok(Box::new(MyApp::new(cc)))
         })
     )
 }
 
-fn use_custom_them(style: &mut Style) {
-    style.visuals.panel_fill = Color32::from_rgb(153, 151, 145)
+fn style_mut(style: &mut Style) {
+    style.override_font_id = Some(FontId::monospace(32.0));
 }
 struct MyApp {
     port: Option<Box<dyn SerialPort + 'static>>,
@@ -33,20 +46,25 @@ struct MyApp {
 impl MyApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         cc.egui_ctx.set_theme(Theme::Light);
-        cc.egui_ctx.style_mut_of(Theme::Light, use_custom_them);
+        cc.egui_ctx.style_mut_of(Theme::Light, style_mut);
         Self {
-            port: None
+            port: None,
         }
     }
 }
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel
-            ::default()
-            .show(ctx, |ui| {
-                ui.heading("My egui Application");
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.visuals_mut().override_text_color = Some(egui::Color32::from_gray(18));
+            egui::Image
+                ::new(egui::include_image!("../res/background.png"))
+                .paint_at(ui, ui.ctx().screen_rect());
+            ui.vertical_centered(|ui| {
+                ui.label("AUTO");
+                ui.heading("123.4");
             });
+        });
     }
 }
 
